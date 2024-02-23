@@ -27,6 +27,33 @@ fn pick_a_random_word() -> String {
     String::from(words[rand::thread_rng().gen_range(0, words.len())].trim())
 }
 
+fn curr_word(indices: &Vec<bool>, tgt_word_chars:&Vec<char>, word_len: usize) -> String {
+    let mut word = String::new();
+    let mut idx: usize = 0;
+    while idx < word_len {
+        if indices[idx] {
+            word.push(tgt_word_chars[idx]);
+        } else {
+            word.push('-');
+        }
+        idx = idx + 1;
+    }
+    word
+}
+
+fn guess_char_match(indices_res: &Vec<bool>, tgt_word_chars: &Vec<char>, word_len: usize, ch: char) -> (usize, bool) {
+    let mut idx = 0;
+    let mut res = false;
+    while idx < word_len {
+        if !indices_res[idx] && ch == tgt_word_chars[idx] {
+            res = true;
+            break;
+        }
+        idx = idx + 1;
+    }
+    (idx, res)
+}
+
 fn main() {
     let secret_word = pick_a_random_word();
     // Note: given what you know about Rust so far, it's easier to pull characters out of a
@@ -34,7 +61,25 @@ fn main() {
     // secret_word by doing secret_word_chars[i].
     let secret_word_chars: Vec<char> = secret_word.chars().collect();
     // Uncomment for debugging:
-    // println!("random word: {}", secret_word);
-
+    //println!("random word: {}", secret_word);
+    println!("Welcome to CS110L Hangman!");
+    let word_len = secret_word_chars.len();
+    let mut valid_indices = vec![false; word_len];
+    let mut n_valid = 0;
+    //let mut guess_char = Vec::new();
     // Your code here! :)
+    while n_valid < word_len {
+        println!("The word so far is {}", curr_word(&valid_indices, &secret_word_chars, word_len));
+        println!("You have {} guesses left", word_len - n_valid);
+        print!("Please guess a letter: ");
+        io::stdout().flush().expect("Error flushing stdout");
+        let mut guess = String::new();
+        io::stdin().read_line(&mut guess).expect("Error reading line");
+        if let (idx, true) = guess_char_match(&valid_indices, &secret_word_chars, word_len, guess.chars().nth(0).unwrap()) {
+            n_valid += 1;
+            valid_indices[idx] = true;
+        } else {
+            println!("Sorry, that letter is not in the word");
+        }
+    }
 }
